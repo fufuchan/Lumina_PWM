@@ -18,11 +18,8 @@ const int led3 = 10;
 const int led4 = 11;
 const int led5 = 5;
 
-bool Normal = true;
-bool CommWOne = false;
-bool CommWTwo = false;
-//
-//byte dutyCycle = 2;
+bool Normal = false;
+bool Comm = false;
 
 void setup() {
   Serial.begin(115200);
@@ -37,25 +34,20 @@ void setup() {
   pinMode (led2, OUTPUT);
   pinMode (led3, OUTPUT);
   pinMode (led4, OUTPUT);
-  pinMode (led5, OUTPUT);
-
-//  TCCR2A = bit (WGM20) | bit (COM2B1) | bit (COM2A1) | bit (COM2A0);       
-//  TCCR2B = bit (CS21);         // phase correct PWM, prescaler of 8
-//  OCR2A = dutyCycle;           // duty cycle out of 255 
-//  OCR2B = 255 - dutyCycle;     // duty cycle out of 255 
+  pinMode (led5, OUTPUT); 
 
   // wait until serial port opens for native USB devices
   while (! Serial) {
     delay(1);
   }
 
-  Serial.println("Adafruit VL53L0X test");
+  //Serial.println("Adafruit VL53L0X test");
   if (!lox.begin()) {
-    Serial.println(F("Failed to boot VL53L0X"));
+   // Serial.println(F("Failed to boot VL53L0X"));
     while (1);
   }
   // power
-  Serial.println(F("VL53L0X API Simple Ranging example\n\n"));
+ // Serial.println(F("VL53L0X API Simple Ranging example\n\n"));
 }
 
 
@@ -65,50 +57,34 @@ void loop() {
 //  Serial.print("Reading a measurement... ");
   lox.rangingTest(&measure, false); // pass in 'true' to get debug data printout!
 
-  if (measure.RangeStatus != 4) {  // phase failures have incorrect data
-    Serial.print("Distance (mm): "); Serial.println(measure.RangeMilliMeter);
+  if (measure.RangeStatus != 4 && measure.RangeMilliMeter < 800) {  // phase failures have incorrect data
+//    Serial.println("Distance (mm): "); 
+//    Serial.println(measure.RangeMilliMeter);
     outputOn();
-  
   
     if (measure.RangeStatus != 4) {  // phase failures have incorrect data
     Normal = true;
-    CommWOne = false;
-    CommWTwo = false;
+//    Comm = false;
+    Serial.write("a");
     }
   
-    if (measure.RangeStatus != 4 && pinVal1 == 1 && pinVal2 == 0) {
-    Normal = true;
-    CommWOne = true;
-    CommWTwo = false;
-    }
+//    if (measure.RangeStatus != 4 && pinVal1 == 1 && pinVal2 == 0) {
+//    Normal = true;
+//    Comm = true;
+//    }
+//    
+//    if (measure.RangeStatus != 4 && pinVal2 == 1 && pinVal1 == 0) {
+//    Normal = true;
+//    Comm = true;
+//    } 
     
-    if (measure.RangeStatus != 4 && pinVal2 == 1 && pinVal1 == 0) {
-    Normal = true;
-    CommWOne = true;
-    CommWTwo = false;
-    } 
-    
-    if (measure.RangeStatus != 4 && pinVal1 == 1 && pinVal2 == 1) {
-    Normal = true;
-    CommWOne = true;
-    CommWTwo = true;
-    }
-
-    Serial.print ("Normal = ");
-    Serial.print (Normal);
-    Serial.print ("CommWOne = ");
-    Serial.print (CommWOne);
-    Serial.print ("CommWTwo = ");
-    Serial.print (CommWTwo);
-
-   
-
-    if (Normal == true && CommWOne == true && CommWTwo == true) {
-      CommunicatingWTwo();
-    }
+//    Serial.println ("Normal = ");
+//    Serial.println (Normal);
+//    Serial.println ("Communicating = ");
+//    Serial.println (Communicating);
      
-    else if (Normal == true && CommWOne == true) {
-      CommunicatingWOne();
+   if (Normal == true && Comm == true) {
+      Communicating();
     }
     
     else if (Normal == true) {
@@ -117,12 +93,11 @@ void loop() {
 
     
   } else {
-    Serial.println(" out of range ");
-    outputOff();
     Off();
-   }
+    outputOff();
+    Serial.write("b");
+  }
 
-  
   input();
   delay(100);
 
@@ -145,21 +120,34 @@ void input () {
   pinVal1 = digitalRead(inPin1);
   if (lastPinVal1 != pinVal1) {
     digitalWrite(LED_BUILTIN, pinVal1);
-    Serial.println(pinVal1);
+    Serial.print(pinVal1);
     lastPinVal1 = pinVal1;
+
+    if (pinVal1 == 1) {
+    Comm = true;
+    } else {
+    Comm = false;
+    }
   }
-  pinVal2 = digitalRead(inPin2);
-  if (lastPinVal2 != pinVal2) {
-    digitalWrite(LED_BUILTIN, pinVal2);
-    Serial.println(pinVal2);
-    lastPinVal2 = pinVal2;
-  }
+  
+//  pinVal2 = digitalRead(inPin2);
+//  if (lastPinVal2 != pinVal2) {
+//    digitalWrite(LED_BUILTIN, pinVal2);
+//    Serial.print(pinVal2);
+//    lastPinVal2 = pinVal2;
+//
+//    if (pinVal2 == 1) {
+//    Comm = true;
+//    } else {
+//    Comm = false;
+//    }
+//  }
 }
 
 void NormalBehaviour() {
   // fade in from min to max in increments of 5 points:
 
-  for (int fadeValue = 0 ; fadeValue <= 255; fadeValue += 5) { //Normal == false || 
+  for (int fadeValue = 0 ; fadeValue <= 255; fadeValue += 5) {
     // sets the value (range from 0 to 255):
     analogWrite(led1, fadeValue);
     analogWrite(led2, fadeValue);
@@ -183,7 +171,7 @@ void NormalBehaviour() {
   }
 }
 
-void CommunicatingWOne() {
+void Communicating() {
     for (int fadeValueOne = 0 ; fadeValueOne <= 255; fadeValueOne += 20) {
     // sets the value (range from 0 to 255):
 
@@ -210,30 +198,6 @@ void CommunicatingWOne() {
   }
 }
 
-void CommunicatingWTwo() {
-    for (int fadeValueTwo = 0 ; fadeValueTwo <= 255; fadeValueTwo += 20) {
-    // sets the value (range from 0 to 255):
-    analogWrite(led1, fadeValueTwo);
-    analogWrite(led2, fadeValueTwo);
-    analogWrite(led3, fadeValueTwo);
-    analogWrite(led4, fadeValueTwo);
-    analogWrite(led5, fadeValueTwo);
-    // wait for 30 milliseconds to see the dimming effect
-    delay(10);
-  }
-
-  // fade out from max to min in increments of 5 points:
-  for (int fadeValueTwo = 255 ; fadeValueTwo >= 0; fadeValueTwo -= 20) {
-    // sets the value (range from 0 to 255):
-    analogWrite(led1, fadeValueTwo);
-    analogWrite(led2, fadeValueTwo);
-    analogWrite(led3, fadeValueTwo);
-    analogWrite(led4, fadeValueTwo);
-    analogWrite(led5, fadeValueTwo);
-    // wait for 30 milliseconds to see the dimming effect
-    delay(10);
-  }
-}
 
 void Off() {
 
