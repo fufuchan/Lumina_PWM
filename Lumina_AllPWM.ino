@@ -64,19 +64,8 @@ void loop() {
   
     if (measure.RangeStatus != 4) {  // phase failures have incorrect data
     Normal = true;
-//    Comm = false;
     Serial.write("a");
     }
-  
-//    if (measure.RangeStatus != 4 && pinVal1 == 1 && pinVal2 == 0) {
-//    Normal = true;
-//    Comm = true;
-//    }
-//    
-//    if (measure.RangeStatus != 4 && pinVal2 == 1 && pinVal1 == 0) {
-//    Normal = true;
-//    Comm = true;
-//    } 
     
 //    Serial.println ("Normal = ");
 //    Serial.println (Normal);
@@ -130,18 +119,6 @@ void input () {
     }
   }
   
-//  pinVal2 = digitalRead(inPin2);
-//  if (lastPinVal2 != pinVal2) {
-//    digitalWrite(LED_BUILTIN, pinVal2);
-//    Serial.print(pinVal2);
-//    lastPinVal2 = pinVal2;
-//
-//    if (pinVal2 == 1) {
-//    Comm = true;
-//    } else {
-//    Comm = false;
-//    }
-//  }
 }
 
 void NormalBehaviour() {
